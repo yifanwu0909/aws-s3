@@ -297,7 +297,11 @@ module AWS
             options.replace(bucket)
             bucket = nil
           end
-          '/' << File.join(bucket_name(bucket), name)
+          # '/' << File.join(bucket_name(bucket), name)
+          # "/#{name}"
+          puts "bucket_name(bucket)"+bucket_name(bucket)
+          puts "connection.subdomain"+connection.inspect
+          "#{'/'+bucket_name(bucket) unless bucket_name(bucket) == connection.subdomain}/#{name}"
         end
     
         private

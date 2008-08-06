@@ -178,7 +178,8 @@ module AWS
               options = name
               name    = nil
             end
-            "/#{bucket_name(name)}#{RequestOptions.process(options).to_query_string}"
+            # DAMIEN
+            "#{bucket_name(name) unless bucket_name(name) == connection.subdomain}#{RequestOptions.process(options).to_query_string}" # Don't prepent the bucket name to url if we're sending the request to mybucket.s3.amazonaws.com
           end
       end
       

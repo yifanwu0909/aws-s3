@@ -63,6 +63,7 @@ module AWS
           def canonical_string            
             options = {}
             options[:expires] = expires if expires?
+            options[:using_bucket_host] = true if @options[:using_bucket_host]
             CanonicalString.new(request, options)
           end
           memoized :canonical_string
@@ -156,7 +157,7 @@ module AWS
           # "For non-authenticated or anonymous requests. A NotImplemented error result code will be returned if 
           # an authenticated (signed) request specifies a Host: header other than 's3.amazonaws.com'"
           # (from http://docs.amazonwebservices.com/AmazonS3/2006-03-01/VirtualHosting.html)
-          request['Host'] = DEFAULT_HOST
+          request['Host'] = @options[:using_bucket_host] ? AWS::S3::Base.connection.subdomain : DEFAULT_HOST # Get MalformedXML error without the bucket's domain name (i.e. mybucked.s3.amazonaws.com) here
           build
         end
     
@@ -173,7 +174,10 @@ module AWS
               self << (key =~ self.class.amazon_header_prefix ? "#{key}:#{value}" : value)
               self << "\n"
             end
-            self << path
+            self << "#{'/'+AWS::S3::Base.connection.subdomain if @options[:using_bucket_host]}#{path}"
+            puts "*"*60
+            puts "#{'/'+AWS::S3::Base.connection.subdomain if @options[:using_bucket_host]}#{path}"
+            puts "*"*60
           end
       
           def initialize_headers

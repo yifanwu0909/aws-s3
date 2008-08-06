@@ -42,6 +42,11 @@ module AWS
           else
             request.content_length = 0                                                                                       
           end
+          puts http.address
+          puts headers
+          puts request.path
+          puts request.method
+          puts request.body
           http.request(request, &block)
         end
         
@@ -69,7 +74,8 @@ module AWS
       end
       
       def subdomain
-        http.address[/^([^.]+).#{DEFAULT_HOST}$/, 1]
+        # http.address[/^([^.]+).#{DEFAULT_HOST}$/, 1]
+        http.address[/^(.+)\.#{DEFAULT_HOST}$/, 1]
       end
       
       def persistent?
@@ -127,7 +133,7 @@ module AWS
         
         # Just do Header authentication for now
         def authenticate!(request)
-          request['Authorization'] = Authentication::Header.new(request, access_key_id, secret_access_key)
+          request['Authorization'] = Authentication::Header.new(request, access_key_id, secret_access_key, :using_bucket_host => options[:using_bucket_host]) # All so so hacky :(
         end
         
         def add_user_agent!(request)
@@ -251,7 +257,7 @@ module AWS
       class Options < Hash #:nodoc:
         class << self
           def valid_options
-            [:access_key_id, :secret_access_key, :server, :port, :use_ssl, :persistent, :proxy]
+            [:access_key_id, :secret_access_key, :server, :port, :use_ssl, :persistent, :proxy, :using_bucket_host]
           end
         end
         
@@ -264,6 +270,7 @@ module AWS
           extract_persistent!
           extract_server!
           extract_port!
+          extract_using_bucket_host!
           extract_remainder!
         end
         
@@ -305,6 +312,10 @@ module AWS
           
           def extract_remainder!
             update(options)
+          end
+          
+          def extract_using_bucket_host!
+            self[:using_bucket_host] = options.has_key?(:using_bucket_host) ? options[:using_bucket_host] : false
           end
           
           def validate!
